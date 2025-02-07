@@ -43,11 +43,6 @@ class CreditCardEDA:
 
 
 
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-import logging
-
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 class IPGeolocationEDA:
@@ -77,10 +72,7 @@ class IPGeolocationEDA:
         else:
             logging.error("❌ Data is not loaded.")
 
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-import logging
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
