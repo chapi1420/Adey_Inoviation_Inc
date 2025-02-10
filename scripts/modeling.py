@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import mlflow
-import pickle
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
@@ -58,16 +57,10 @@ class FraudModelTrainer:
             mlflow.sklearn.log_model(self.model, "fraud_model")
     
     def save_model(self):
-        """Save the trained model to MLflow and as a Pickle file."""
+        """Save the trained model."""
         Path(self.output_path).parent.mkdir(parents=True, exist_ok=True)
         mlflow.sklearn.save_model(self.model, self.output_path)
-        print(f"Model saved successfully to {self.output_path} (MLflow)")
-        
-        # Save as Pickle
-        pickle_path = self.output_path + ".pkl"
-        with open(pickle_path, "wb") as f:
-            pickle.dump(self.model, f)
-        print(f"Model also saved as {pickle_path} (Pickle format)")
+        print(f"Model saved successfully to {self.output_path}")
     
     def run_pipeline(self):
         print("Loading data...")
@@ -99,8 +92,8 @@ class FraudModelTrainer:
 if __name__ == "__main__":
     FRAUD_DATA_PATH = "/home/nahomnadew/Desktop/10x/week8/Adey_Inoviation_Inc/Data/featured/processed_fraud_data.csv"
     CREDIT_DATA_PATH = "/home/nahomnadew/Desktop/10x/week8/Adey_Inoviation_Inc/Data/cleaned/cleaned_creditcard.csv"
-    OUTPUT_PATH = "/home/nahomnadew/Desktop/10x/week8/Adey_Inoviation_Inc/Models/fraud_model"
-    MODEL_TYPE = 'logistic_regression'  # Options: 'random_forest', 'logistic_regression', 'decision_tree'
+    OUTPUT_PATH = "/home/nahomnadew/Desktop/10x/week8/Adey_Inoviation_Inc/Models/decision_tree_fraud_model"
+    MODEL_TYPE = 'decision_tree'  # Options: 'random_forest', 'logistic_regression', 'decision_tree'
     
     trainer = FraudModelTrainer(FRAUD_DATA_PATH, CREDIT_DATA_PATH, OUTPUT_PATH, MODEL_TYPE)
     trainer.run_pipeline()
