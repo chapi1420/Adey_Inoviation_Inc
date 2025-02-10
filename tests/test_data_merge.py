@@ -1,8 +1,9 @@
 import unittest
 import pandas as pd
 import os
-from data_merger import DataMerger  # Assuming the script is saved as data_merger.py
-
+import sys
+sys.path.append(os.path.abspath("Adey_Inoviation_Inc/scripts"))
+from   scripts.data_merger import DataMerger  
 class TestDataMerger(unittest.TestCase):
     def setUp(self):
         """Set up temporary datasets for testing."""
