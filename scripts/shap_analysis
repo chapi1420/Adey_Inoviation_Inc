@@ -1,0 +1,142 @@
+import shap
+import lime
+import lime.lime_tabular
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import StandardScaler
+
+class FraudDetection:
+    def __init__(self, data_path, target_column):
+        """
+        Initialize the FraudDetection class.
+        
+        Parameters:
+        - data_path: Path to the dataset CSV file.
+        - target_column: The name of the target variable (fraud indicator).
+        """
+        self.data_path = data_path
+        self.target_column = target_column
+        self.model = None
+        self.X_train, self.X_test, self.y_train, self.y_test = None, None, None, None
+        self.scaler = StandardScaler()
+    
+    def load_and_split_data(self):
+        """Loads the dataset, splits into train & test sets, and scales features."""
+        df = pd.read_csv(self.data_path)
+
+        # Separate features & target variable
+        X = df.drop(columns=[self.target_column])
+        y = df[self.target_column]
+
+        # Split into train & test sets (80% train, 20% test)
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
+            X, y, test_size=0.2, random_state=42
+        )
+
+        # Normalize numerical data
+        self.X_train = pd.DataFrame(self.scaler.fit_transform(self.X_train), columns=X.columns)
+        self.X_test = pd.DataFrame(self.scaler.transform(self.X_test), columns=X.columns)
+
+        print("✅ Data successfully loaded and split!")
+
+    def train_model(self):
+        """Trains a Random Forest model for fraud detection."""
+        self.model = RandomForestClassifier(n_estimators=100, random_state=42)
+        self.model.fit(self.X_train, self.y_train)
+        print("✅ Model trained successfully!")
+
+# ---------------- Explainability Class ---------------- #
+
+class ModelExplainer:
+    def __init__(self, model, X_train, X_test):
+        """
+        Initialize the ModelExplainer with a trained model and dataset.
+        
+        Parameters:
+        - model: Trained ML model
+        - X_train: Training dataset (features)
+        - X_test: Test dataset (features)
+        """
+        self.model = model
+        self.X_train = X_train
+        self.X_test = X_test
+
+    # ---------------- SHAP Methods ---------------- #
+    def compute_shap_values(self):
+        """Computes SHAP values for the trained model."""
+        self.explainer = shap.TreeExplainer(self.model)
+        self.shap_values = self.explainer.shap_values(self.X_test)
+        print("✅ SHAP values computed successfully!")
+
+    def plot_shap_summary(self):
+        """Generates a SHAP summary plot."""
+        shap.summary_plot(self.shap_values, self.X_test)
+
+    def plot_shap_force(self, instance_idx=0):
+        """Generates a SHAP force plot for a specific instance."""
+        shap.force_plot(
+            self.explainer.expected_value, 
+            self.shap_values[instance_idx], 
+            self.X_test.iloc[instance_idx]
+        )
+
+    def plot_shap_dependence(self, feature_name):
+        """Generates a SHAP dependence plot for a given feature."""
+        shap.dependence_plot(feature_name, self.shap_values, self.X_test)
+
+    # ---------------- LIME Methods ---------------- #
+    def compute_lime_explanation(self, instance_idx=0):
+        """Generates a LIME explanation for a specific instance."""
+        lime_explainer = lime.lime_tabular.LimeTabularExplainer(
+            training_data=self.X_train.values,
+            feature_names=self.X_train.columns,
+            mode="classification"
+        )
+        
+        exp = lime_explainer.explain_instance(
+            self.X_test.iloc[instance_idx].values, 
+            self.model.predict_proba
+        )
+        
+        return exp
+
+    def plot_lime_explanation(self, instance_idx=0):
+        """Plots the LIME explanation for a specific instance."""
+        exp = self.compute_lime_explanation(instance_idx)
+        exp.show_in_notebook()
+
+    def save_lime_explanation(self, instance_idx=0, file_name="lime_explanation.html"):
+
+
+        
+        """Saves the LIME explanation to an HTML file."""
+        exp = self.compute_lime_explanation(instance_idx)
+        exp.save_to_file(file_name)
+        print(f"✅ LIME explanation saved as {file_name}")
+
+# ---------------- USAGE EXAMPLE ---------------- #
+
+# Initialize fraud detection pipeline
+fraud_detector = FraudDetection(data_path="/home/nahomnadew/Desktop/10x/week8/Adey_Inoviation_Inc/Data/featured/processed_fraud_data.csv", target_column="class")
+x = pd.read_csv("/home/nahomnadew/Desktop/10x/week8/Adey_Inoviation_Inc/Data/featured/processed_and encoded_fraud_data.csv")
+print(x.dtypes)
+
+fraud_detector.load_and_split_data()
+fraud_detector.train_model()
+
+# Initialize ModelExplainer
+explainer = ModelExplainer(fraud_detector.model, fraud_detector.X_train, fraud_detector.X_test)
+
+# Compute SHAP values
+explainer.compute_shap_values()
+
+# Generate SHAP plots
+explainer.plot_shap_summary()
+explainer.plot_shap_force(0)
+
+# Generate LIME explanation
+explainer.plot_lime_explanation(0)
+explainer.save_lime_explanation(0)
